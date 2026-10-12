@@ -49,8 +49,11 @@
       line-height: 1.75;
       letter-spacing: 0.01em;
     }
-    /* 代码块内强制西文字体，否则中英混排会很难看 */
+    /* 代码块内强制西文字体，否则中英混排会很难看。
+       position:relative 是给右上角的复制按钮做定位锚点。
+       代码块真实结构是 <pre v-pre data-lang="sql">，不是 div.language-*。 */
     .markdown-section pre[data-lang] {
+      position: relative;
       font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
       line-height: 1.6;
       tab-size: 2;
@@ -63,8 +66,8 @@
       display: block;
       margin: 1.2em auto;
     }
-    /* 代码块右上角留出复制按钮的位置 */
-    .markdown-section div[class^="language-"] { position: relative; }
+    /* 代码块右上角留出复制按钮的位置。真实结构是 <pre v-pre data-lang>，
+       没有 div[class^="language-"] 这种东西（那是 VitePress 那套）。 */
     .copy-btn {
       position: absolute;
       top: 8px;
@@ -81,7 +84,7 @@
       opacity: 0;
       transition: opacity .2s;
     }
-    div[class^="language-"]:hover .copy-btn { opacity: 1; }
+    pre[data-lang]:hover .copy-btn { opacity: 1; }
     .copy-btn:hover { color: #1d9e75; border-color: #1d9e75; }
     .copy-btn.done { color: #1d9e75; border-color: #1d9e75; }
     @media (prefers-color-scheme: dark) {
@@ -143,17 +146,27 @@
       },
 
       pagination: {
-        prevText: '← 上一篇',
+        // 注意是 previousText 不是 prevText，写错这个键插件会用默认的 "PREVIOUS"
+        previousText: '← 上一篇',
         nextText: '下一篇 →',
         crossChapter: true,
         crossChapterText: true
       },
 
-      // 代码复制按钮
+      // 代码复制按钮。
+      //
+      // 踩了两个坑，都记在这里别再犯：
+      //   1. docsify v4 的生命周期只有 init / mounted / beforeEach /
+      //      afterEach / doneEach / ready —— 没有 done。写 hook.done 会抛
+      //      TypeError，且默认 catchPluginErrors:true 会把异常静默吞掉，
+      //      表现为「按钮一个都不出现」且完全没有报错。
+      //   2. 代码块渲染出来是 <pre v-pre data-lang="sql">，**不是**
+      //      <div class="language-sql">（那是 VitePress/marked 默认那套）。
+      //      错写成 div[class^="language-"] 会匹配到 0 个元素。
       plugins: [
-        function (hook, vm) {
-          hook.done(function () {
-            document.querySelectorAll('div[class^="language-"]').forEach(function (el) {
+        function (hook) {
+          hook.doneEach(function () {
+            document.querySelectorAll('.markdown-section pre[data-lang]').forEach(function (el) {
               if (el.querySelector('.copy-btn')) return;
               var btn = document.createElement('button');
               btn.className = 'copy-btn';
@@ -161,7 +174,9 @@
               btn.addEventListener('click', function () {
                 var code = el.querySelector('code');
                 if (!code) return;
-                var text = code.innerText;
+                // textContent 而不是 innerText：innerText 跟着渲染走，
+                // 代码块一旦溢出滚动，取出来的换行会被吞掉。
+                var text = code.textContent;
                 var done = function () {
                   btn.textContent = '已复制';
                   btn.classList.add('done');
@@ -186,7 +201,6 @@
               });
               el.appendChild(btn);
             });
-            vm.syncAndRender();
           });
         }
       ]
@@ -196,6 +210,8 @@
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
+  <!-- pagination 是真的插件文件，不引入的话上面的 pagination 配置一个字都不会生效 -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
 
   <!-- 代码高亮语言，按需增删。顺序无所谓，都挂在 Prism 上 -->
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
@@ -205,5 +221,7 @@
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-r.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-javascript.min.js"></script>
+  <!-- 本站自己讲的是 Markdown 语法，没有它 ```markdown 代码块不会高亮 -->
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-markdown.min.js"></script>
 </body>
 </html>

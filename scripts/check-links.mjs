@@ -33,28 +33,54 @@ async function walk(dir) {
   return out;
 }
 
-/** 从 markdown 文本里抽出所有 ![](...) 和 [](...) 的目标 */
+/**
+ * 从 markdown 文本里抽出所有 ![](...) 和 [](...) 的目标
+ *
+ * 围栏要按长度从长到短剥：README.md 用 ```` 包裹内含 ``` 的示例代码，
+ * 若直接用 /```[\s\S]*?```/g 去剥，非贪婪匹配会在四反引号块内部错位配对，
+ * 把示例里的内容当成正文（误报），也可能吞掉真正的引用（漏报）。
+ */
+const FENCE_RE = /^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?\n[ \t]*\1[^\n]*$|(`{3,}|~{3,})[\s\S]*?\3/gm;
+
+function stripCode(md) {
+  return md.replace(FENCE_RE, (m) => m.replace(/\S/g, ' ')).replace(/`[^`\n]*`/g, '');
+}
+
 function extractTargets(md) {
   const targets = [];
-  // 先剥掉围栏代码块，避免把示例代码里的路径误判为真实引用
-  const text = md.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '');
+  const text = stripCode(md);
   const re = /!?\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+["'][^"']*["'])?\s*\)/g;
   let m;
   while ((m = re.exec(text)) !== null) targets.push(m[1]);
   return targets;
 }
 
-/** Docsify 支持省略扩展名：/a/sql -> a/sql.md 或 a/sql/index.md */
-function resolveDoc(baseDir, linkPath) {
-  const abs = path.resolve(baseDir, linkPath);
-  const candidates = [
-    abs,
-    abs + '.md',
-    path.join(abs, 'README.md'),
-    path.join(abs, 'index.md'),
-    abs + '.html',
-  ];
-  return candidates.find((c) => existsSync(c) && !existsSync(path.dirname(c) + path.sep));
+/**
+ * 找出磁盘上大小写不匹配的目标。
+ * Windows 下 existsSync('A/Sql.md') 会命中 'a/sql.md' 并返回 true，
+ * 但 GitHub Pages 跑 Linux，区分大小写 —— 本地过、线上 404。
+ */
+async function caseMismatchFor(abs) {
+  const dir = path.dirname(abs);
+  const name = path.basename(abs);
+  if (!existsSync(dir)) return null;
+  const entries = await readdir(dir);
+  const ci = entries.find((e) => e.toLowerCase() === name.toLowerCase());
+  return ci && ci !== name ? ci : null;
+}
+
+/** 从 docs/ 根往下逐级比对大小写，目录名写错也能查出来 */
+async function caseMismatchChain(abs) {
+  const rel = path.relative(DOCS, abs).replace(/\\/g, '/');
+  if (!rel || rel.startsWith('..')) return null;
+  let cur = DOCS;
+  for (const seg of rel.split('/')) {
+    if (!seg) continue;
+    const real = await caseMismatchFor(path.join(cur, seg));
+    if (real) return { real, wrote: seg };
+    cur = path.join(cur, seg);
+  }
+  return null;
 }
 
 async function main() {
@@ -106,20 +132,17 @@ async function main() {
         continue;
       }
 
-      // 大小写：Linux 服务器区分大小写，Windows 不区分
+      // 大小和「大小写」两件事都要看：GitHub Pages 跑 Linux，区分大小写，
+      // 本地 Windows 能打开不代表线上打得开。
+      const mismatch = await caseMismatchChain(hit);
+      if (mismatch) {
+        warns.push(`${relFile}\n    大小写不一致：实际是 ${mismatch.real}，写的是 ${mismatch.wrote}`);
+      }
+
       if (isImage) {
-        const dir = path.dirname(abs);
-        const name = path.basename(abs);
-        if (existsSync(dir)) {
-          const entries = await readdir(dir);
-          const ci = entries.find((e) => e.toLowerCase() === name.toLowerCase());
-          if (ci && ci !== name) {
-            warns.push(`${relFile}\n    大小写不一致：实际是 ${ci}，写的是 ${name}`);
-          }
-        }
-        const st = await stat(abs);
+        const st = await stat(hit);
         if (st.size > 1024 * 1024) {
-          warns.push(`${relFile}\n    图片偏大（${(st.size / 1024 / 1024).toFixed(2)} MB）：${name}`);
+          warns.push(`${relFile}\n    图片偏大（${(st.size / 1024 / 1024).toFixed(2)} MB）：${path.basename(hit)}`);
         }
       }
     }

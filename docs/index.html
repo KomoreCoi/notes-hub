@@ -3,9 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-  <meta name="description" content="个人 Markdown 笔记">
+  <meta name="description" content="按主题归档的 Markdown 笔记">
+  <!-- 内联 SVG favicon，省一个文件，也避免浏览器去请求 /favicon.ico 拿 404 -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d9e75'/%3E%3Cpath d='M8 9h16M8 16h16M8 23h10' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <meta property="og:title" content="我的笔记">
+  <meta property="og:description" content="按主题归档的 Markdown 笔记">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://komorecoi.github.io/notes-hub/">
   <title>我的笔记</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/themes/vue.css">
   <style>
     :root {
       --theme-color: #1d9e75;
@@ -161,7 +167,9 @@
       subMaxLevel: 2,
       maxLevel: 4,
       auto2top: true,
-      topMargin: 72,
+      // 顶部没有一个固定导航栏了（app-nav 已 display:none），再留 72px
+      // 会让锚点跳转把标题顶出可视区一大截。哪天恢复了 navbar 要改回来。
+      topMargin: 0,
       notFoundPage: true,
       themeColor: '#1d9e75',
 
@@ -171,7 +179,13 @@
         depth: 3,
         paths: 'auto',
         hideOtherSidebarContent: false,
-        namespace: 'notes'
+        namespace: 'notes',
+        // 实测过（jsdom 里跑真实索引）：内置 search 是**子串正则匹配**，
+        // 不是分词检索。query.split(/[\s\-，\\/]+/) 只在有空格/连字符时才切开，
+        // 中文整句会原样变成一个正则去正文里找 —— 所以搜「数据清洗」「缺失值」
+        // 「整数除法」都能正常命中，中文反而是这套实现的强项。
+        // 真正的局限只有两条：必须连续子串（页面写「缺失值」时搜「缺失值处理」
+        // 搜不到），以及不支持错别字容错。要更强的语义搜索才需要换掉整个插件。
       },
 
       // 注意是 previousText 不是 prevText，写错这个键插件会用默认的 "PREVIOUS"
@@ -236,21 +250,23 @@
     };
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
+  <!-- CDN 一律锁到具体版本（原来是 @4 / @1 浮动），避免上游大版本更新把站点弄坏。
+       升级时手动改版本号并本地 npm run dev 验证一遍。 -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/zoom-image.min.js"></script>
   <!-- pagination 是真的插件文件，不引入的话上面的 pagination 配置一个字都不会生效 -->
-  <script src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2.10.1/dist/docsify-pagination.min.js"></script>
 
   <!-- 代码高亮语言，按需增删。顺序无所谓，都挂在 Prism 上 -->
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-sql.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-r.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-sql.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-json.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-r.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-javascript.min.js"></script>
   <!-- 本站自己讲的是 Markdown 语法，没有它 ```markdown 代码块不会高亮 -->
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-markdown.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-markdown.min.js"></script>
 </body>
 </html>

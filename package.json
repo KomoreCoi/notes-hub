@@ -1,9 +1,16 @@
 {
-  "name": "your-notes",
+  "name": "notes-hub",
   "version": "1.0.0",
   "private": true,
   "description": "按主题组织的 Markdown 笔记，Docsify + GitHub Pages",
   "type": "module",
+  "author": "ZzYang",
+  "license": "MIT",
+  "homepage": "https://komorecoi.github.io/notes-hub/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KomoreCoi/notes-hub.git"
+  },
   "scripts": {
     "dev": "docsify serve docs --port 3000",
     "check": "node scripts/check-links.mjs",

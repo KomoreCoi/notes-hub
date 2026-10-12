@@ -28,6 +28,17 @@ jobs:
       - name: 校验图片路径与内部链接
         run: node scripts/check-links.mjs
 
+      - name: 检查侧边栏是否与当前文档同步
+        # 加/删笔记后忘记跑 npm run build:sidebar 的话，线上侧边栏会漏掉新页面。
+        # 跑一遍生成逻辑，有 diff 就说明提交里漏了同步。
+        run: |
+          node scripts/build-sidebar.mjs
+          if ! git diff --exit-code -- docs/_sidebar.md docs/README.md; then
+            echo "::error::_sidebar.md / README.md 与当前 Markdown 不同步"
+            echo "本地执行 npm run build:sidebar 后一起提交即可。"
+            exit 1
+          fi
+
   deploy:
     needs: check
     runs-on: ubuntu-latest

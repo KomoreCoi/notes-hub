@@ -1,5 +1,7 @@
 # SQL 片段备忘
 
+> 以下均为 PostgreSQL 方言。MySQL 里 `IS DISTINCT FROM`、`FULL OUTER JOIN`、`EXPLAIN ANALYZE` 都不成立。
+
 ## 窗口函数
 
 ### 同比 / 环比
@@ -10,9 +12,13 @@ SELECT
     amount,
     LAG(amount, 12) OVER (ORDER BY month)                AS yoy_base,
     LAG(amount, 1)  OVER (ORDER BY month)                AS mom_base,
-    amount / NULLIF(LAG(amount, 12) OVER (ORDER BY month), 0) - 1 AS yoy
+    -- amount 是整数列时必须 cast：PG 里 int / int 是整数除法，
+    -- 不 cast 的话同比值会被截断成 0，看着全变成 -100%
+    amount::numeric / NULLIF(LAG(amount, 12) OVER (ORDER BY month), 0) - 1 AS yoy
 FROM monthly_sales;
 ```
+
+`NULLIF(..., 0)` 挡分母为零；`::numeric` 挡整数除法。MySQL 的 `/` 本身就返回浮点数，所以本地跑得好好的，换 PG 才发现同比全是 0——这个坑很难联想到是除法规则不一样。
 
 ### 组内累计
 

@@ -108,6 +108,11 @@
       transition: opacity .2s, color .2s, border-color .2s;
     }
     pre[data-lang]:hover .copy-btn { opacity: 1; }
+    /* 触屏设备没有 hover 状态，上面的规则永远不会命中，按钮会一直停在
+       opacity:0 —— 等于手机上完全无法复制。这里让它在无 hover 的环境常驻。 */
+    @media (hover: none) {
+      .copy-btn { opacity: 1; }
+    }
     /* 复制按钮 hover / 复制完成时变绿；语言标签保持灰色不动，
        它是常驻的静态信息，不该跟着鼠标状态跳色。 */
     pre[data-lang]:hover .copy-btn,
@@ -217,26 +222,42 @@
                 // textContent 而不是 innerText：innerText 跟着渲染走，
                 // 代码块一旦溢出滚动，取出来的换行会被吞掉。
                 var text = code.textContent;
-                var done = function () {
-                  btn.textContent = '已复制';
-                  btn.classList.add('done');
+                var reset = function (label, cls) {
+                  btn.textContent = label;
+                  if (cls) btn.classList.add(cls);
                   setTimeout(function () {
                     btn.textContent = '复制';
                     btn.classList.remove('done');
                   }, 1600);
                 };
-                if (navigator.clipboard && window.isSecureContext) {
-                  navigator.clipboard.writeText(text).then(done);
-                } else {
-                  // Pages 走 https，clipboard 一般可用；这里兜底非安全上下文
+                var done = function () { reset('已复制', 'done'); };
+                var fail = function () { reset('复制失败'); };
+                // 老办法：临时 textarea + execCommand。非安全上下文（http 本地预览）
+                // 和 clipboard API 被拒时都靠它兜底。
+                var legacyCopy = function () {
                   var ta = document.createElement('textarea');
                   ta.value = text;
                   ta.style.position = 'fixed';
                   ta.style.opacity = '0';
                   document.body.appendChild(ta);
                   ta.select();
-                  try { document.execCommand('copy'); done(); } catch (e) { btn.textContent = '复制失败'; }
+                  var ok = false;
+                  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
                   document.body.removeChild(ta);
+                  return ok;
+                };
+                if (navigator.clipboard && window.isSecureContext) {
+                  // 必须处理 reject：权限被拒 / 页面在 iframe 里被权限策略拦住时，
+                  // writeText 会 reject。只写 .then(done) 的话就是一次 unhandled
+                  // rejection —— 用户点了按钮，界面一点反应都没有。
+                  navigator.clipboard.writeText(text).then(done, function () {
+                    if (legacyCopy()) done();
+                    else fail();
+                  });
+                } else if (legacyCopy()) {
+                  done();
+                } else {
+                  fail();
                 }
               });
               el.appendChild(btn);

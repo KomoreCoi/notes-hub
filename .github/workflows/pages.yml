@@ -11,10 +11,12 @@ permissions:
   pages: write
   id-token: write
 
-# 同分支的旧部署取消掉，避免连续推送时竞争
+# 同一时刻只允许一个部署。cancel-in-progress 保持 false：官方 pages 模板
+# 明确要求「不要取消进行中的 run，要让生产部署跑完」，中途打断可能留下
+# 部署到一半的站点。连续推送时会排队串行执行，不竞争。
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # Docsify 是纯前端，不需要构建，只做检查

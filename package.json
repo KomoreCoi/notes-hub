@@ -1,0 +1,16 @@
+{
+  "name": "your-notes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "按主题组织的 Markdown 笔记，Docsify + GitHub Pages",
+  "type": "module",
+  "scripts": {
+    "dev": "docsify serve docs --port 3000",
+    "check": "node scripts/check-links.mjs",
+    "build:sidebar": "node scripts/build-sidebar.mjs",
+    "prebuild:sidebar": "npm run check"
+  },
+  "devDependencies": {
+    "docsify-cli": "^4.4.4"
+  }
+}

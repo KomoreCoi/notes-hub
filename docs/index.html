@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta name="description" content="个人 Markdown 笔记">
+  <title>我的笔记</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <style>
+    :root {
+      --theme-color: #1d9e75;
+      --theme-color-dark: #0f6e56;
+      --bg-page: #f6f1e7;       /* 主体暖米 */
+      --bg-sidebar: #ece4d2;    /* 侧边栏深一点的米色 */
+      --bg-code: #efe9d9;       /* 代码块背景 */
+      --bg-card: #fbf7ec;       /* 内容区亮一点点区分 */
+      --border-soft: #d8cfb8;   /* 边框米色 */
+    }
+    body { background: var(--bg-page); }
+    .sidebar { background: var(--bg-sidebar); border-color: var(--border-soft) !important; }
+    .sidebar ul li a { color: #3d3a30; }
+    .sidebar ul li.active > a,
+    .sidebar ul li a:hover { color: var(--theme-color-dark); }
+    .markdown-section { background: transparent; }
+    .app-nav { background: transparent; border-color: var(--border-soft) !important; }
+    .markdown-section h1, .markdown-section h2, .markdown-section h3,
+    .markdown-section h4, .markdown-section h5, .markdown-section h6 {
+      color: #2b2a25;
+      font-weight: 600;
+    }
+    .markdown-section h1 { padding-bottom: .4em; border-bottom: 1px solid var(--border-soft); }
+    .markdown-section a { color: var(--theme-color-dark); }
+    .markdown-section blockquote {
+      margin: 1em 0;
+      padding: .2em 1em;
+      color: #5d5a4e;
+      border-left: 4px solid var(--border-soft);
+      background: var(--bg-card);
+    }
+    .markdown-section table tr:nth-child(2n) { background: var(--bg-card); }
+    .markdown-section table th { background: var(--bg-sidebar); }
+    .markdown-section pre { background: var(--bg-code) !important; }
+    .markdown-section code { background: rgba(0, 0, 0, .04); padding: .12em .35em; border-radius: 3px; }
+    /* 中文环境下正文默认字体偏细、字距偏紧，这里补一点 */
+    .markdown-section {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+      letter-spacing: 0.01em;
+    }
+    /* 代码块内强制西文字体，否则中英混排会很难看 */
+    .markdown-section pre[data-lang] {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      line-height: 1.6;
+      tab-size: 2;
+    }
+    .markdown-section code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+    /* 图片不要撑破容器 */
+    .markdown-section img {
+      max-width: 100%;
+      border-radius: 6px;
+      display: block;
+      margin: 1.2em auto;
+    }
+    /* 代码块右上角留出复制按钮的位置 */
+    .markdown-section div[class^="language-"] { position: relative; }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 10;
+      padding: 4px 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #888;
+      background: rgba(255, 255, 255, .92);
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    div[class^="language-"]:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover { color: #1d9e75; border-color: #1d9e75; }
+    .copy-btn.done { color: #1d9e75; border-color: #1d9e75; }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page: #1d1b16;
+        --bg-sidebar: #15140f;
+        --bg-code: #25221b;
+        --bg-card: #25221b;
+        --border-soft: #3a362a;
+      }
+      .markdown-section h1 { color: #f0ebe0; }
+      .markdown-section, .markdown-section p, .markdown-section li,
+      .markdown-section table td, .markdown-section table th { color: #d8d2c2; }
+      .copy-btn { background: rgba(40, 40, 40, .92); color: #aaa; border-color: #444; }
+    }
+    /* 封面页排版微调 */
+    .cover-main { font-size: 2.6rem !important; }
+  </style>
+</head>
+<body>
+  <div id="app">正在加载…</div>
+
+  <script>
+    window.$docsify = {
+      name: '我的笔记',
+      repo: '',
+      logo: '',
+      loadSidebar: true,
+      loadNavbar: true,
+      coverpage: false,
+      onlyCoverHome: false,
+      // 关键：让文档内的相对链接/图片按当前文件所在目录解析，
+      // 这正是 a/notes.md 里写 images/x.png 能工作的原因。
+      relativePath: true,
+      // 目录里前两级标题也进侧边栏
+      subMaxLevel: 2,
+      maxLevel: 4,
+      auto2top: true,
+      topMargin: 72,
+      notFoundPage: true,
+      themeColor: '#1d9e75',
+
+      search: {
+        placeholder: '搜索笔记…',
+        noData: '没有找到相关内容',
+        depth: 3,
+        paths: 'auto',
+        // Docsify 默认分词器对中文无效，关掉后按空格分词更实用
+        hideOtherSidebarContent: false,
+        namespace: 'notes'
+      },
+
+      pagination: {
+        prevText: '← 上一篇',
+        nextText: '下一篇 →',
+        crossChapter: true,
+        crossChapterText: true
+      },
+
+      // 代码复制按钮
+      plugins: [
+        function (hook, vm) {
+          hook.done(function () {
+            document.querySelectorAll('div[class^="language-"]').forEach(function (el) {
+              if (el.querySelector('.copy-btn')) return;
+              var btn = document.createElement('button');
+              btn.className = 'copy-btn';
+              btn.textContent = '复制';
+              btn.addEventListener('click', function () {
+                var code = el.querySelector('code');
+                if (!code) return;
+                var text = code.innerText;
+                var done = function () {
+                  btn.textContent = '已复制';
+                  btn.classList.add('done');
+                  setTimeout(function () {
+                    btn.textContent = '复制';
+                    btn.classList.remove('done');
+                  }, 1600);
+                };
+                if (navigator.clipboard && window.isSecureContext) {
+                  navigator.clipboard.writeText(text).then(done);
+                } else {
+                  // Pages 走 https，clipboard 一般可用；这里兜底非安全上下文
+                  var ta = document.createElement('textarea');
+                  ta.value = text;
+                  ta.style.position = 'fixed';
+                  ta.style.opacity = '0';
+                  document.body.appendChild(ta);
+                  ta.select();
+                  try { document.execCommand('copy'); done(); } catch (e) { btn.textContent = '复制失败'; }
+                  document.body.removeChild(ta);
+                }
+              });
+              el.appendChild(btn);
+            });
+            vm.syncAndRender();
+          });
+        }
+      ]
+    };
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
+
+  <!-- 代码高亮语言，按需增删。顺序无所谓，都挂在 Prism 上 -->
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-sql.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-r.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-javascript.min.js"></script>
+</body>
+</html>

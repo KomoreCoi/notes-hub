@@ -1,0 +1,50 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # 允许在 Actions 页面手动触发
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同分支的旧部署取消掉，避免连续推送时竞争
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  # Docsify 是纯前端，不需要构建，只做检查
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 校验图片路径与内部链接
+        run: node scripts/check-links.mjs
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      # Docsify 无需构建，原样上传 docs 目录
+      - name: 上传站点文件
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs'
+
+      - id: deployment
+        name: 部署到 GitHub Pages
+        uses: actions/deploy-pages@v4

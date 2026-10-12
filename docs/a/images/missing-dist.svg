@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" width="640" height="300" role="img" aria-label="示例占位图：缺失值分布">
+  <rect width="640" height="300" fill="#fafaf9"/>
+  <rect x="0.5" y="0.5" width="639" height="299" fill="none" stroke="#e7e5e4"/>
+  <text x="24" y="34" font-family="system-ui, sans-serif" font-size="15" fill="#44403c">缺失值分布（示例占位图）</text>
+  <line x1="80" y1="250" x2="610" y2="250" stroke="#a8a29e"/>
+  <line x1="80" y1="60" x2="80" y2="250" stroke="#a8a29e"/>
+  <g font-family="system-ui, sans-serif" font-size="12" fill="#57534e">
+    <rect x="100" y="70" width="34" height="180" fill="#93c5fd"/><text x="100" y="268" text-anchor="middle">user_id</text>
+    <rect x="180" y="132" width="34" height="118" fill="#93c5fd"/><text x="180" y="268" text-anchor="middle">email</text>
+    <rect x="260" y="196" width="34" height="54" fill="#93c5fd"/><text x="260" y="268" text-anchor="middle">city</text>
+    <rect x="340" y="216" width="34" height="34" fill="#93c5fd"/><text x="340" y="268" text-anchor="middle">age</text>
+    <rect x="420" y="226" width="34" height="24" fill="#93c5fd"/><text x="420" y="268" text-anchor="middle">sex</text>
+    <rect x="500" y="240" width="34" height="10" fill="#93c5fd"/><text x="500" y="268" text-anchor="middle">city_id</text>
+  </g>
+  <text x="320" y="292" font-family="system-ui, sans-serif" font-size="11" fill="#78716c" text-anchor="middle">用你自己的图片替换 docs/a/images/ 下的文件</text>
+</svg>

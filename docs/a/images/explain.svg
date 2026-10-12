@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260" width="640" height="260" role="img" aria-label="示例占位图：执行计划对比">
+  <rect width="640" height="260" fill="#fafaf9"/>
+  <rect x="0.5" y="0.5" width="639" height="259" fill="none" stroke="#e7e5e4"/>
+  <text x="24" y="32" font-family="system-ui, sans-serif" font-size="15" fill="#44403c">执行计划对比（示例占位图）</text>
+  <g font-family="system-ui, sans-serif" font-size="12">
+    <text x="30" y="70" fill="#b91c1c">优化前 1842 ms</text>
+    <rect x="150" y="52" width="130" height="26" rx="5" fill="#fecaca"/>
+    <rect x="292" y="52" width="150" height="26" rx="5" fill="#fecaca"/>
+    <rect x="454" y="52" width="150" height="26" rx="5" fill="#fecaca"/>
+    <g fill="#7f1d1d" font-size="11">
+      <text x="215" y="70" text-anchor="middle">Seq Scan t1</text>
+      <text x="367" y="70" text-anchor="middle">Hash Join</text>
+      <text x="529" y="70" text-anchor="middle">Seq Scan t2</text>
+    </g>
+
+    <text x="30" y="134" fill="#15803d">优化后 23 ms</text>
+    <rect x="150" y="116" width="130" height="26" rx="5" fill="#bbf7d0"/>
+    <rect x="292" y="116" width="150" height="26" rx="5" fill="#bbf7d0"/>
+    <rect x="454" y="116" width="150" height="26" rx="5" fill="#bbf7d0"/>
+    <g fill="#14532d" font-size="11">
+      <text x="215" y="134" text-anchor="middle">Index Scan t1</text>
+      <text x="367" y="134" text-anchor="middle">Nested Loop</text>
+      <text x="529" y="134" text-anchor="middle">Index Scan t2</text>
+    </g>
+  </g>
+  <text x="320" y="180" font-family="system-ui, sans-serif" font-size="12" fill="#57534e" text-anchor="middle">关键差异：全表扫描 → 索引扫描，连接方式随之改变</text>
+  <text x="320" y="234" font-family="system-ui, sans-serif" font-size="11" fill="#78716c" text-anchor="middle">用你自己的图片替换 docs/a/images/ 下的文件</text>
+</svg>

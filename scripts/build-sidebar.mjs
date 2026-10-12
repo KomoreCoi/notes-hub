@@ -22,12 +22,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS = path.join(ROOT, 'docs');
 
 const SKIP_DIRS = new Set(['images']);
-const SKIP_FILES = new Set([
-  '_sidebar.md', '_navbar.md', '_coverpage.md', '_404.md',
-  'index.html',
-]);
 
-const isSkippable = (name) => name.startsWith('.') && name !== '.nojekyll';
+// 点开头的是站点自身配置（.nojekyll 等），不是笔记内容。
+// 下划线开头的 _sidebar.md / _404.md 不需要额外过滤：它们都在 docs/ 根，
+// 而 collectTopics() 只看一级子目录，本来就碰不到（别再为此加过滤分支）。
+const isSkippable = (name) => name.startsWith('.');
 
 async function walk(dir, out = []) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {

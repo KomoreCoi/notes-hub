@@ -24,8 +24,8 @@ const isExternal = (u) => /^(https?:)?\/\//i.test(u) || /^(mailto|tel|data):/i.t
 async function walk(dir) {
   const out = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
-    // GitHub Pages 默认会忽略下划线开头的文件，而 .nojekyll 是必须保留的例外
-    if (entry.name.startsWith('.') && entry.name !== '.nojekyll') continue;
+    // 点开头的是站点配置（.nojekyll 等），不是笔记内容
+    if (entry.name.startsWith('.')) continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) out.push(...(await walk(full)));
     else out.push(full);
@@ -34,7 +34,10 @@ async function walk(dir) {
 }
 
 /**
- * 从 markdown 文本里抽出所有 ![](...) 和 [](...) 的目标
+ * 抽出正文里所有需要校验的引用目标：
+ *   1. markdown 的 ![](...) 和 [](...)
+ *   2. 原生 HTML 的 <img src="..."> / <a href="...">  —— 调图片尺寸、给链接
+ *      加 target 时常这么写，markdown 那条正则抓不到，漏掉就是线上 404
  *
  * 围栏要按长度从长到短剥：README.md 用 ```` 包裹内含 ``` 的示例代码，
  * 若直接用 /```[\s\S]*?```/g 去剥，非贪婪匹配会在四反引号块内部错位配对，
@@ -49,9 +52,15 @@ function stripCode(md) {
 function extractTargets(md) {
   const targets = [];
   const text = stripCode(md);
-  const re = /!?\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+["'][^"']*["'])?\s*\)/g;
   let m;
-  while ((m = re.exec(text)) !== null) targets.push(m[1]);
+
+  const mdRe = /!?\[[^\]]*\]\(\s*<?([^)\s>]+)>?(?:\s+["'][^"']*["'])?\s*\)/g;
+  while ((m = mdRe.exec(text)) !== null) targets.push(m[1]);
+
+  // 属性值带双引号、单引号、以及不带引号，三种写法都收
+  const attrRe = /<(?:img|a)\b[^>]*?\b(?:src|href)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
+  while ((m = attrRe.exec(text)) !== null) targets.push(m[1] ?? m[2] ?? m[3]);
+
   return targets;
 }
 
@@ -108,7 +117,15 @@ async function main() {
 
     for (const target of extractTargets(md)) {
       if (isExternal(target) || target.startsWith('#')) continue;
-      const clean = decodeURIComponent(target.split('#')[0].split('?')[0]);
+      const raw = target.split('#')[0].split('?')[0];
+      // 链接里出现非法 % 转义时会抛 URIError。不接住的话整个脚本崩在
+      // main().catch 里，只吐一堆栈，看不出是哪个文件的问题。
+      let clean;
+      try {
+        clean = decodeURIComponent(raw);
+      } catch {
+        clean = raw;
+      }
       if (!clean) continue;
 
       const isImage = IMAGE_EXT.has(path.extname(clean).toLowerCase());

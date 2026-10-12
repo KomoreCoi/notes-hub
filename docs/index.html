@@ -50,13 +50,43 @@
       letter-spacing: 0.01em;
     }
     /* 代码块内强制西文字体，否则中英混排会很难看。
-       position:relative 是给右上角的复制按钮做定位锚点。
-       代码块真实结构是 <pre v-pre data-lang="sql">，不是 div.language-*。 */
+       position:relative 是给右上角的复制按钮做定位锚点。 */
     .markdown-section pre[data-lang] {
       position: relative;
       font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
       line-height: 1.6;
       tab-size: 2;
+    }
+    /* 代码块的两个角标共用一套外观：右上角的复制按钮（JS 插入，hover 才浮现）
+       和左上角的语言标签（伪元素，常驻不隐藏）。共用同一组属性，以后调样式
+       只改这一处，两者不会走样。
+       顺带关掉 vue.css 的旧标签 —— 它是右上角 9.6px 的 #ccc 浅灰，
+       压在米色底上几乎看不见，还正好被复制按钮盖住。 */
+    .markdown-section pre:after { display: none; }
+    .copy-btn,
+    .markdown-section pre[data-lang]:before {
+      position: absolute;
+      top: 8px;
+      z-index: 10;
+      padding: 4px 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #888;
+      background: rgba(255, 255, 255, .92);
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+    }
+    .markdown-section pre[data-lang]:before {
+      content: attr(data-lang);
+      left: 8px;
+      pointer-events: none;
+    }
+    /* vue.css 给 pre>code 的顶部留白是 padding:2.2em（12.8px 字号下约 28px），
+       那点空间只够放原来那个 9.6px 的小字标签。左上角这个常驻角标跟右上角
+       的复制按钮同尺寸（高约 27px），不改这里就会压到第一行代码。
+       2.2em -> 3em，顶部多留约 10px，代码内容一行都不动。 */
+    .markdown-section pre[data-lang] > code {
+      padding-top: 3em;
     }
     .markdown-section code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
     /* 图片不要撑破容器 */
@@ -66,26 +96,17 @@
       display: block;
       margin: 1.2em auto;
     }
-    /* 代码块右上角留出复制按钮的位置。真实结构是 <pre v-pre data-lang>，
-       没有 div[class^="language-"] 这种东西（那是 VitePress 那套）。 */
     .copy-btn {
-      position: absolute;
-      top: 8px;
       right: 8px;
-      z-index: 10;
-      padding: 4px 10px;
-      font-size: 12px;
-      line-height: 1.4;
-      color: #888;
-      background: rgba(255, 255, 255, .92);
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
       cursor: pointer;
       opacity: 0;
-      transition: opacity .2s;
+      transition: opacity .2s, color .2s, border-color .2s;
     }
     pre[data-lang]:hover .copy-btn { opacity: 1; }
-    .copy-btn:hover { color: #1d9e75; border-color: #1d9e75; }
+    /* 复制按钮 hover / 复制完成时变绿；语言标签保持灰色不动，
+       它是常驻的静态信息，不该跟着鼠标状态跳色。 */
+    pre[data-lang]:hover .copy-btn,
+    .copy-btn:hover,
     .copy-btn.done { color: #1d9e75; border-color: #1d9e75; }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -98,7 +119,16 @@
       .markdown-section h1 { color: #f0ebe0; }
       .markdown-section, .markdown-section p, .markdown-section li,
       .markdown-section table td, .markdown-section table th { color: #d8d2c2; }
-      .copy-btn { background: rgba(40, 40, 40, .92); color: #aaa; border-color: #444; }
+      /* 深色下白底标签会刺眼，两个角标一起换成深底灰字 */
+      .copy-btn,
+      .markdown-section pre[data-lang]:before {
+        background: rgba(40, 40, 40, .92);
+        color: #aaa;
+        border-color: #444;
+      }
+      pre[data-lang]:hover .copy-btn,
+      .copy-btn:hover,
+      .copy-btn.done { color: #6fd6b0; border-color: #6fd6b0; }
     }
     /* 封面页排版微调 */
     .cover-main { font-size: 2.6rem !important; }
@@ -140,13 +170,12 @@
         noData: '没有找到相关内容',
         depth: 3,
         paths: 'auto',
-        // Docsify 默认分词器对中文无效，关掉后按空格分词更实用
         hideOtherSidebarContent: false,
         namespace: 'notes'
       },
 
+      // 注意是 previousText 不是 prevText，写错这个键插件会用默认的 "PREVIOUS"
       pagination: {
-        // 注意是 previousText 不是 prevText，写错这个键插件会用默认的 "PREVIOUS"
         previousText: '← 上一篇',
         nextText: '下一篇 →',
         crossChapter: true,

@@ -99,6 +99,9 @@
     }
     /* 封面页排版微调 */
     .cover-main { font-size: 2.6rem !important; }
+    /* 关闭 loadNavbar 后仍可能存在的空容器，强制隐藏 */
+    .app-nav { display: none !important; }
+    body { padding-top: 0 !important; }
   </style>
 </head>
 <body>
@@ -110,7 +113,7 @@
       repo: '',
       logo: '',
       loadSidebar: true,
-      loadNavbar: true,
+      loadNavbar: false,
       coverpage: false,
       onlyCoverHome: false,
       // 关键：让文档内的相对链接/图片按当前文件所在目录解析，

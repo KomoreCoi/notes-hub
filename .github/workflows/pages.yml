@@ -26,7 +26,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Node 20 已于 2026-04 EOL。脚本只用 node:fs/promises / node:path /
+          # node:url 这些标准模块、零依赖，跟大版本无关，跟着本机 24 走。
+          node-version: '24'
       - name: 校验图片路径与内部链接
         run: node scripts/check-links.mjs
 

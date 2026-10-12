@@ -102,6 +102,11 @@
     /* 关闭 loadNavbar 后仍可能存在的空容器，强制隐藏 */
     .app-nav { display: none !important; }
     body { padding-top: 0 !important; }
+    /* 侧边栏切换按钮：vue.css 主题在打开态强制 width: 284px（一个大白块），
+       这里把它收回 auto，跟关闭态一致 —— 用户说"关闭时什么样就什么样"。 */
+    .sidebar-toggle {
+      width: auto !important;
+    }
   </style>
 </head>
 <body>
